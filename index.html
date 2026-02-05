@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>飞机大战 - 终极优化版</title>
+    <style>
+        body { margin: 0; padding: 0; overflow: hidden; }
+        canvas { display: block; background: #000; }
+    </style>
+</head>
+<body>
+    <canvas id="game" width="480" height="640"></canvas>
+    
+    <script>
+        const canvas = document.getElementById('game');
+        const ctx = canvas.getContext('2d');
+        
+        // 玩家飞机
+        const player = {
+            x: canvas.width / 2,
+            y: canvas.height - 50,
+            w: 50,
+            h: 50,
+            speed: 6
+        };
+        
+        // 敌机数组
+        const enemies = [];
+        let score = 0;
+        let gameRunning = true;
+        
+        // 绘制飞机（三角形+机翼）
+        function drawPlane(x, y, w, h, color) {
+            ctx.fillStyle = color;
+            // 机身（三角形）
+            ctx.beginPath();
+            ctx.moveTo(x, y - h/2);
+            ctx.lineTo(x - w/2, y);
+            ctx.lineTo(x + w/2, y);
+            ctx.closePath();
+            ctx.fill();
+            // 机翼
+            ctx.fillRect(x - w/4, y - h/4, w/2, 4);
+            ctx.fillRect(x - w/4, y + h/4, w/2, 4);
+        }
+        
+        // 绘制敌机
+        function drawEnemy(x, y, w, h) {
+            ctx.fillStyle = '#f00';
+            ctx.fillRect(x, y, w, h);
+        }
+        
+        // 游戏循环
+        function gameLoop() {
+            if (!gameRunning) return;
+            
+            // 清屏
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制玩家
+            drawPlane(player.x, player.y, player.w, player.h, '#00f');
+            
+            // 绘制敌机
+            for (let e of enemies) {
+                drawEnemy(e.x, e.y, e.w, e.h);
+                e.y += e.speed;
+                if (e.y > canvas.height) {
+                    enemies.splice(enemies.indexOf(e), 1);
+                }
+            }
+            
+            // 生成敌机
+            if (Math.random() < 0.02) {
+                enemies.push({
+                    x: Math.random() * (canvas.width - 40),
+                    y: -40,
+                    w: 40,
+                    h: 40,
+                    speed: 2 + Math.random() * 3
+                });
+            }
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // 触摸控制
+        let touchStartX = 0;
+        canvas.addEventListener('touchstart', e => {
+            e.preventDefault();
+            touchStartX = e.touches[0].clientX;
+        });
+        
+        canvas.addEventListener('touchmove', e => {
+            e.preventDefault();
+            if (e.touches.length > 0) {
+                const dx = e.touches[0].clientX - touchStartX;
+                if (Math.abs(dx) > 10) {
+                    player.x += dx * 0.7;
+                    touchStartX = e.touches[0].clientX;
+                }
+            }
+        });
+        
+        // 键盘控制
+        document.addEventListener('keydown', e => {
+            if (e.key === 'ArrowLeft') player.x -= player.speed;
+            if (e.key === 'ArrowRight') player.x += player.speed;
+        });
+        
+        // 启动游戏
+        gameLoop();
+    </script>
+</body>
+</html>
